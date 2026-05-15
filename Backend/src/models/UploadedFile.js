@@ -54,6 +54,16 @@ const uploadedFileSchema = new mongoose.Schema({
   },
   exifVerified: { type: Boolean, default: null }, // null = not checked, true/false = result
 
+  // Claude AI Vision analysis — only for participant photos
+  aiAnalysis: {
+    isEventPhoto:   { type: Boolean, default: null },
+    hasVisibleDate: { type: Boolean, default: null },
+    visibleDate:    { type: String,  default: null },
+    confidence:     { type: String,  default: null }, // HIGH / MEDIUM / LOW
+    reason:         { type: String,  default: null },
+    suspicious:     { type: Boolean, default: null },
+  },
+
 }, { timestamps: true });
 
 // Index for quick lookup by uploader and form

@@ -261,6 +261,48 @@ const DeanDashboard = () => {
                         )}
                       </div>
 
+                      {/* AI PHOTO ANALYSIS BADGE */}
+                      {(() => {
+                        const ai = form.photoAIAnalysis;
+                        if (!ai) return (
+                          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold w-fit bg-yellow-50 text-yellow-700 border border-yellow-200">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01"/></svg>
+                            AI photo analysis not available
+                          </div>
+                        );
+                        if (ai.suspicious) return (
+                          <div className="mt-3 px-3 py-2 rounded-lg text-xs w-fit bg-red-50 text-red-700 border border-red-300">
+                            <div className="font-bold flex items-center gap-1 mb-1">
+                              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                              AI: Suspicious Photo
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div className="mt-0.5 opacity-70">Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                        if (!ai.isEventPhoto) return (
+                          <div className="mt-3 px-3 py-2 rounded-lg text-xs w-fit bg-orange-50 text-orange-700 border border-orange-200">
+                            <div className="font-bold flex items-center gap-1 mb-1">
+                              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                              AI: Not an Event Photo
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div className="mt-0.5 opacity-70">Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                        return (
+                          <div className="mt-3 px-3 py-2 rounded-lg text-xs w-fit bg-green-50 text-green-700 border border-green-200">
+                            <div className="font-bold flex items-center gap-1 mb-1">
+                              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                              AI: Event Photo Verified
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.hasVisibleDate && ai.visibleDate && <div className="mt-0.5">Visible date: <strong>{ai.visibleDate}</strong></div>}
+                            {ai.confidence && <div className="mt-0.5 opacity-70">Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      })()}
+
                       {/* EXIF VERIFICATION BADGE */}
                       {form.photoVerificationFlag && (
                         <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold w-fit ${

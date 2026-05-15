@@ -190,7 +190,7 @@ const StudentDashboard = () => {
 
   const [uploadedFiles, setUploadedFiles] = useState({
     brochure:    { url: null, fileId: null, uploading: false },
-    photo:       { url: null, fileId: null, uploading: false },
+    photo:       { url: null, fileId: null, uploading: false, aiAnalysis: null, exifWarning: null },
     certificate: { url: null, fileId: null, uploading: false },
   });
 
@@ -263,9 +263,21 @@ const StudentDashboard = () => {
       });
       setUploadedFiles(p => ({
         ...p,
-        [key]: { url: data.url, fileId: data.fileId, uploading: false },
+        [key]: { url: data.url, fileId: data.fileId, uploading: false,
+          ...(key === 'photo' ? { aiAnalysis: data.aiAnalysis || null, exifWarning: data.exifWarning || null } : {})
+        },
       }));
-      toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} uploaded!`);
+      if (key === 'photo' && data.aiAnalysis) {
+        if (data.aiAnalysis.suspicious) {
+          toast.error('Warning: Photo looks suspicious. Please upload a genuine event photo.');
+        } else if (!data.aiAnalysis.isEventPhoto) {
+          toast.error('Warning: This does not look like an event venue photo. Please re-upload.');
+        } else {
+          toast.success('Photo uploaded and verified!');
+        }
+      } else {
+        toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} uploaded!`);
+      }
     } catch (err) {
       setFormData(p => ({ ...p, [fieldName]: null }));
       setUploadedFiles(p => ({ ...p, [key]: { url: null, fileId: null, uploading: false } }));
@@ -706,6 +718,54 @@ const StudentDashboard = () => {
                       <FileUploadBox name="participantPhotoFile" file={formData.participantPhotoFile} onChange={handleChange} accept="image/*" uploading={uploadedFiles.photo.uploading} />
                     </Field>
                     <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>Image only • Required • Event venue mein li gayi photo</p>
+                    {/* AI Analysis Badge */}
+                    {uploadedFiles.photo.url && !uploadedFiles.photo.uploading && (() => {
+                      const ai = uploadedFiles.photo.aiAnalysis;
+                      if (!ai) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF8EC', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>⚠️</span> AI verification unavailable. Dean will manually review.
+                          </div>
+                        );
+                      }
+                      if (ai.suspicious) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FCEBEB', border: '0.5px solid #F4A4A4', fontSize: 11.5, color: '#A32D2D' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>❌</span> Suspicious Photo Detected
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ color: '#C44', marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      if (!ai.isEventPhoto) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF4E0', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>⚠️</span> Not an Event Photo
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#EAF3DE', border: '0.5px solid #A8D580', fontSize: 11.5, color: '#3B6D11' }}>
+                          <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                            <span>✅</span> Event Photo Verified
+                          </div>
+                          <div>{ai.reason}</div>
+                          {ai.hasVisibleDate && ai.visibleDate && (
+                            <div style={{ marginTop: 2 }}>Visible Date: <strong>{ai.visibleDate}</strong></div>
+                          )}
+                          {uploadedFiles.photo.exifWarning && (
+                            <div style={{ color: '#854F0B', marginTop: 3 }}>⚠️ {uploadedFiles.photo.exifWarning}</div>
+                          )}
+                          {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div>
                     <Field label="Certificate" required>

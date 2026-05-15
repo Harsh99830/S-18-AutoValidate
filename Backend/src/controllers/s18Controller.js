@@ -150,7 +150,23 @@ const getPendingForDean = async (req, res) => {
     const forms = await S18.find({ status: 'pending' })
       .populate('student', 'name email registrationNo')
       .sort({ createdAt: -1 });
-    res.json(forms);
+
+    // Attach AI analysis for each form's photo
+    const UploadedFile = require('../models/UploadedFile');
+    const formsWithAI = await Promise.all(forms.map(async (form) => {
+      const obj = form.toObject();
+      if (form.participantPhotoLink) {
+        const photoRecord = await UploadedFile.findOne({
+          cloudinaryUrl: form.participantPhotoLink,
+          fileType: 'photo'
+        }).select('aiAnalysis exifDate exifVerified');
+        obj.photoAIAnalysis = photoRecord?.aiAnalysis || null;
+        obj.photoExifDate   = photoRecord?.exifDate || null;
+      }
+      return obj;
+    }));
+
+    res.json(formsWithAI);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
