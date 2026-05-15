@@ -134,6 +134,60 @@ const StudentDashboard = () => {
   });
 
   // Uploaded file URLs + IDs from Cloudinary (set after each file is picked)
+  const regNoRegex = /^[0-9]{4}[A-Z]{2,6}[0-9]{3}$/;
+
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const setFieldError = (name, msg) =>
+    setFieldErrors(p => ({ ...p, [name]: msg }));
+  const clearFieldError = (name) =>
+    setFieldErrors(p => ({ ...p, [name]: '' }));
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'registrationNo':
+        if (!regNoRegex.test((value || '').trim()))
+          return 'Invalid format. Expected: 2021BTCS001';
+        break;
+      case 'mobileNo':
+        if (!/^[0-9]{10}$/.test(value))
+          return 'Must be exactly 10 digits.';
+        break;
+      case 'parentMobileNo':
+        if (!/^[0-9]{10}$/.test(value))
+          return 'Must be exactly 10 digits.';
+        break;
+      case 'cumulativeAttendance': {
+        const n = Number(value);
+        if (isNaN(n) || n < 0 || n > 100)
+          return 'Must be between 0 and 100.';
+        break;
+      }
+      case 'startDate':
+        if (value) {
+          const d = new Date(value);
+          const today = new Date(); today.setHours(0,0,0,0);
+          if (d > today) return 'From Date cannot be a future date.';
+        }
+        break;
+      case 'endDate':
+        if (value && formData.startDate) {
+          const from = new Date(formData.startDate);
+          const to = new Date(value);
+          if (to < from) return 'To Date cannot be before From Date.';
+          if ((to - from) / (1000*60*60*24) > 30) return 'Duration cannot exceed 30 days.';
+        }
+        break;
+      case 'activityTypeOther':
+        if (formData.activityType === 'Other' && !value.trim())
+          return 'Please specify the activity type.';
+        break;
+      default:
+        break;
+    }
+    return '';
+  };
+
   const [uploadedFiles, setUploadedFiles] = useState({
     brochure:    { url: null, fileId: null, uploading: false },
     photo:       { url: null, fileId: null, uploading: false },
@@ -228,6 +282,30 @@ const StudentDashboard = () => {
       if (file) handleFileUpload(name, file);
     } else {
       setFormData(p => ({ ...p, [name]: value }));
+      // Clear error while typing, validate on meaningful input
+      if (fieldErrors[name]) clearFieldError(name);
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const err = validateField(name, value);
+    setFieldError(name, err);
+  };
+
+  const handleTeamMemberBlur = (idx, field, value) => {
+    const key = `teamMember_${idx}_${field}`;
+    if (field === 'registrationNo') {
+      if (!regNoRegex.test((value || '').trim())) {
+        setFieldError(key, 'Invalid format. Expected: 2021BTCS001');
+      } else if (value.trim() === formData.registrationNo.trim()) {
+        setFieldError(key, 'Cannot be same as your registration number.');
+      } else {
+        clearFieldError(key);
+      }
+    } else if (field === 'name') {
+      if (!value.trim()) setFieldError(key, 'Name is required.');
+      else clearFieldError(key);
     }
   };
 
@@ -242,7 +320,6 @@ const StudentDashboard = () => {
     // ── Validation ──
 
     // Registration No. format: e.g. 2021BTCS001
-    const regNoRegex = /^[0-9]{4}[A-Z]{2,6}[0-9]{3}$/;
     if (!regNoRegex.test(formData.registrationNo.trim())) {
       toast.error('Registration number is not valid. Expected format: 2021BTCS001');
       return;
@@ -463,10 +540,10 @@ const StudentDashboard = () => {
                 <SectionHeader icon="01" title="Student Details" />
                 <Grid cols={2}>
                   <Field label="Student Name" required>
-                    <Input name="studentName" value={formData.studentName} onChange={handleChange} placeholder="Full name" />
+                    <Input name="studentName" value={formData.studentName} onChange={handleChange} onBlur={handleBlur} placeholder="Full name" />
                   </Field>
-                  <Field label="Registration No." required>
-                    <Input name="registrationNo" value={formData.registrationNo} onChange={handleChange} placeholder="e.g. 2021BTCS001" />
+                  <Field label="Registration No." required error={fieldErrors.registrationNo}>
+                    <Input name="registrationNo" value={formData.registrationNo} onChange={handleChange} onBlur={handleBlur} placeholder="e.g. 2021BTCS001" error={fieldErrors.registrationNo} />
                   </Field>
                 </Grid>
                 <Grid cols={2}>
@@ -513,14 +590,14 @@ const StudentDashboard = () => {
                   <Field label="Poornima Email">
                     <Input name="email" value={formData.email} readOnly style={{ background: '#F7F6FD', color: '#9895B5', cursor: 'not-allowed' }} />
                   </Field>
-                  <Field label="Mobile No." required>
-                    <Input name="mobileNo" value={formData.mobileNo} onChange={handleChange} placeholder="10-digit number" maxLength={10} />
+                  <Field label="Mobile No." required error={fieldErrors.mobileNo}>
+                    <Input name="mobileNo" value={formData.mobileNo} onChange={handleChange} onBlur={handleBlur} placeholder="10-digit number" maxLength={10} error={fieldErrors.mobileNo} />
                   </Field>
                 </Grid>
                 <Grid cols={2}>
-                  <Field label="Cumulative Attendance (%)" required hint="Must be between 0 and 100">
+                  <Field label="Cumulative Attendance (%)" required hint="Must be between 0 and 100" error={fieldErrors.cumulativeAttendance}>
                     <Input name="cumulativeAttendance" type="number" min="0" max="100"
-                      value={formData.cumulativeAttendance} onChange={handleChange} placeholder="e.g. 82" />
+                      value={formData.cumulativeAttendance} onChange={handleChange} onBlur={handleBlur} placeholder="e.g. 82" error={fieldErrors.cumulativeAttendance} />
                   </Field>
                   <Field label="Last Participation Date (this semester)">
                     <Input name="lastParticipation" type="date" value={formData.lastParticipation} onChange={handleChange} />
@@ -561,11 +638,11 @@ const StudentDashboard = () => {
                   </Field>
                 )}
                 <Grid cols={2}>
-                  <Field label="From Date" required>
-                    <Input name="startDate" type="date" value={formData.startDate} onChange={handleChange} />
+                  <Field label="From Date" required error={fieldErrors.startDate}>
+                    <Input name="startDate" type="date" value={formData.startDate} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.startDate} />
                   </Field>
-                  <Field label="To Date" required>
-                    <Input name="endDate" type="date" value={formData.endDate} onChange={handleChange} />
+                  <Field label="To Date" required error={fieldErrors.endDate}>
+                    <Input name="endDate" type="date" value={formData.endDate} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.endDate} />
                   </Field>
                 </Grid>
               </Card>
@@ -588,14 +665,18 @@ const StudentDashboard = () => {
                         background: '#F7F6FD', borderRadius: 10,
                         border: '0.5px solid #E5E3F8', padding: '14px 16px'
                       }}>
-                        <Field label={`Member ${i + 1} — Name`}>
+                        <Field label={`Member ${i + 1} — Name`} error={fieldErrors[`teamMember_${i}_name`]}>
                           <Input value={formData.teamMembers[i].name}
                             onChange={e => handleTeamMemberChange(i, 'name', e.target.value)}
+                            onBlur={e => handleTeamMemberBlur(i, 'name', e.target.value)}
+                            error={fieldErrors[`teamMember_${i}_name`]}
                             placeholder="Full name" />
                         </Field>
-                        <Field label="Registration No.">
+                        <Field label="Registration No." error={fieldErrors[`teamMember_${i}_registrationNo`]}>
                           <Input value={formData.teamMembers[i].registrationNo}
                             onChange={e => handleTeamMemberChange(i, 'registrationNo', e.target.value)}
+                            onBlur={e => handleTeamMemberBlur(i, 'registrationNo', e.target.value)}
+                            error={fieldErrors[`teamMember_${i}_registrationNo`]}
                             placeholder="Reg. no." />
                         </Field>
                       </div>
@@ -640,8 +721,8 @@ const StudentDashboard = () => {
               <Card>
                 <SectionHeader icon="05" title="Parent / Guardian" />
                 <Grid cols={2}>
-                  <Field label="Parent Mobile No." required>
-                    <Input name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} placeholder="10-digit number" maxLength={10} />
+                  <Field label="Parent Mobile No." required error={fieldErrors.parentMobileNo}>
+                    <Input name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} onBlur={handleBlur} placeholder="10-digit number" maxLength={10} error={fieldErrors.parentMobileNo} />
                   </Field>
                 </Grid>
                 <div style={{
@@ -982,22 +1063,30 @@ const Grid = ({ cols, children }) => (
   </div>
 );
 
-const Field = ({ label, required, hint, children }) => (
+const Field = ({ label, required, hint, error, children }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
     <label style={{ fontSize: 13, fontWeight: 600, color: '#4A4870' }}>
       {label}{required && <span style={{ color: '#E24B4A', marginLeft: 3 }}>*</span>}
     </label>
     {children}
-    {hint && <p style={{ margin: 0, fontSize: 11.5, color: '#9895B5' }}>{hint}</p>}
+    {error
+      ? <p style={{ margin: 0, fontSize: 11.5, color: '#E24B4A', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span>⚠</span> {error}
+        </p>
+      : hint && <p style={{ margin: 0, fontSize: 11.5, color: '#9895B5' }}>{hint}</p>
+    }
   </div>
 );
 
-const Input = ({ style, ...props }) => (
+const Input = ({ style, error, ...props }) => (
   <input
     {...props}
-    style={{ ...baseInputStyle, ...style }}
-    onFocus={e => e.target.style.borderColor = '#3C3489'}
-    onBlur={e => e.target.style.borderColor = '#D0CEF0'}
+    style={{ ...baseInputStyle, borderColor: error ? '#E24B4A' : '#D0CEF0', ...style }}
+    onFocus={e => e.target.style.borderColor = error ? '#E24B4A' : '#3C3489'}
+    onBlur={e => {
+      e.target.style.borderColor = error ? '#E24B4A' : '#D0CEF0';
+      props.onBlur && props.onBlur(e);
+    }}
   />
 );
 
