@@ -63,7 +63,7 @@ const DeanDashboard = () => {
   const handleApprove = async (id) => {
     const bonus = parseInt(bonusAttendance[id] || 0);
     if (isNaN(bonus) || bonus <= 0) {
-      toast.error('Bonus attendance days enter karna zaroori hai (> 0).');
+      toast.error('Bonus attendance days are required (> 0).');
       return;
     }
     const form = forms.find(f => f._id === id);
@@ -91,7 +91,7 @@ const DeanDashboard = () => {
   const handleReject = async (id) => {
     if (!remarks[id]?.trim()) {
       setRejectingForms(prev => ({ ...prev, [id]: true }));
-      toast.error('Rejection ke liye remarks required hain.');
+      toast.error('Remarks are required for rejection.');
       return;
     }
     setActionLoading({ id, type: 'reject' });
@@ -100,7 +100,7 @@ const DeanDashboard = () => {
         action: 'rejected',
         remarks: remarks[id],
       });
-      toast.success('Rejected. Student ko notify kar diya.');
+      toast.success('Form rejected. Student has been notified.');
       setForms(prev => prev.filter(f => f._id !== id));
       setRejectingForms(prev => { const n = { ...prev }; delete n[id]; return n; });
     } catch (err) {
@@ -168,8 +168,8 @@ const DeanDashboard = () => {
             {!loading && forms.length === 0 && (
               <div className="flex flex-col items-center justify-center py-24">
                 <CheckCircle className="w-16 h-16 text-gray-300 mb-4" />
-                <p className="text-gray-500 font-medium">Sab clear hai!</p>
-                <p className="text-gray-400 text-sm mt-1">Koi pending forms nahi hain.</p>
+                <p className="text-gray-500 font-medium">All clear!</p>
+                <p className="text-gray-400 text-sm mt-1">No pending forms.</p>
               </div>
             )}
 
@@ -418,7 +418,7 @@ const DeanDashboard = () => {
                             rows={2}
                             value={remarks[id] || ''}
                             onChange={e => setRemarks(prev => ({ ...prev, [id]: e.target.value }))}
-                            placeholder="Student ko kya correct karna hai? Clearly likhein..."
+                            placeholder="What should the student correct? Please be specific..."
                             className="border border-red-200 rounded-lg px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-red-300 bg-white resize-none"
                             autoFocus
                           />
@@ -488,7 +488,7 @@ const DeanDashboard = () => {
             )}
             {!logLoading && activityLog.length === 0 && (
               <div className="text-center py-20 text-gray-400 text-sm">
-                Koi activity nahi mili abhi tak.
+                No activity found yet.
               </div>
             )}
             {!logLoading && activityLog.length > 0 && (

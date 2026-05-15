@@ -74,12 +74,17 @@ Rules:
       }),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      console.error('[OpenAI] API error:', response.status, JSON.stringify(err));
+      return null;
+    }
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content || '';
     const clean = text.replace(/```json|```/g, '').trim();
     return JSON.parse(clean);
-  } catch {
+  } catch (err) {
+    console.error('[OpenAI] Exception:', err.message);
     return null;
   }
 };

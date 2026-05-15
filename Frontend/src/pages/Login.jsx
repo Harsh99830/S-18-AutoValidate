@@ -148,14 +148,14 @@ function Login() {
             <span style={{ color: 'rgba(255,255,255,0.5)' }}>Automation</span>
           </h1>
           <p className="text-base mb-8" style={{ color: 'rgba(255,255,255,0.45)', lineHeight: 1.8 }}>
-            Hackathons, events, meetups mein participate karo<br />
-            aur bonus attendance pao — bina ek bhi physical form bhare.
+            Participate in hackathons, events, and meetups<br />
+            and earn bonus attendance — without filling a single physical form.
           </p>
           <div className="flex flex-col gap-3">
             {[
-              { num: '01', text: 'Online S18 form submit karo' },
-              { num: '02', text: 'Dean digital approval' },
-              { num: '03', text: 'Bonus attendance auto credit' },
+              { num: '01', text: 'Submit S18 form online' },
+              { num: '02', text: 'Dean gives digital approval' },
+              { num: '03', text: 'Bonus attendance auto credited' },
             ].map((s) => (
               <div key={s.num} className="flex items-center gap-4">
                 <span className="text-xs font-mono font-bold w-6" style={{ color: 'rgba(167,139,250,0.6)' }}>{s.num}</span>

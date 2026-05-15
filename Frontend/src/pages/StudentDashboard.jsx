@@ -704,20 +704,20 @@ const StudentDashboard = () => {
                   borderRadius: 10, padding: '10px 14px', fontSize: 12.5, marginBottom: 14,
                   display: 'flex', alignItems: 'center', gap: 8
                 }}>
-                  <span style={{ fontSize: 14 }}>⚠️</span> Sabhi 3 documents mandatory hain — form submit nahi hoga bina inke
+                  <span style={{ fontSize: 14 }}>⚠️</span> All 3 documents are mandatory — form cannot be submitted without them
                 </div>
                 <Grid cols={3}>
                   <div>
                     <Field label="Event Brochure" required>
                       <FileUploadBox name="brochureFile" file={formData.brochureFile} onChange={handleChange} accept=".pdf,image/*" uploading={uploadedFiles.brochure.uploading} />
                     </Field>
-                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF ya image • Required</p>
+                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF or image • Required</p>
                   </div>
                   <div>
                     <Field label="Photo at Event Venue" required>
                       <FileUploadBox name="participantPhotoFile" file={formData.participantPhotoFile} onChange={handleChange} accept="image/*" uploading={uploadedFiles.photo.uploading} />
                     </Field>
-                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>Image only • Required • Event venue mein li gayi photo</p>
+                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>Image only • Required • Photo taken at event venue</p>
                     {/* AI Analysis Badge */}
                     {uploadedFiles.photo.url && !uploadedFiles.photo.uploading && (() => {
                       const ai = uploadedFiles.photo.aiAnalysis;
@@ -771,7 +771,7 @@ const StudentDashboard = () => {
                     <Field label="Certificate" required>
                       <FileUploadBox name="certificateFile" file={formData.certificateFile} onChange={handleChange} accept=".pdf,image/*" uploading={uploadedFiles.certificate.uploading} />
                     </Field>
-                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF ya image • Required</p>
+                    <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF or image • Required</p>
                   </div>
                 </Grid>
               </Card>
@@ -789,7 +789,7 @@ const StudentDashboard = () => {
                   border: '0.5px solid #FAC775', padding: '12px 16px',
                   fontSize: 13, color: '#854F0B', lineHeight: 1.6
                 }}>
-                  <strong>Note:</strong> Written parent permission is required. Tutor will contact the parent directly if written consent is not received before the activity date.
+                  <strong>Note:</strong> Written parent permission is required. The concerned authority will contact the parent directly if written consent is not received before the activity date.
                 </div>
               </Card>
 

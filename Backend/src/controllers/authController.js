@@ -47,23 +47,23 @@ const staffLogin = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email aur password dono required hain.' });
+      return res.status(400).json({ message: 'Email and password are both required.' });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({ message: 'Email ya password galat hai.' });
+      return res.status(401).json({ message: 'Incorrect email or password.' });
     }
 
     // Students should use Google login only
     if (user.role === 'student') {
-      return res.status(403).json({ message: 'Students ko Google login use karna chahiye.' });
+      return res.status(403).json({ message: 'Students must use Google login.' });
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Email ya password galat hai.' });
+      return res.status(401).json({ message: 'Incorrect email or password.' });
     }
 
     const token = generateToken(user._id);
