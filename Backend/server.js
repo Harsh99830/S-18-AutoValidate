@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/db');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo').default || require('connect-mongo');
 const passport = require('passport');
 
 // IMPORTANT: passport strategy must be configured BEFORE routes are loaded
