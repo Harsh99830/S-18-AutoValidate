@@ -7,7 +7,8 @@ const generateToken = (id) => {
 };
 
 const googleAuth = passport.authenticate('google', {
-  scope: ['profile', 'email']
+  scope: ['profile', 'email'],
+  state: false
 });
 
 const googleCallback = (req, res, next) => {
