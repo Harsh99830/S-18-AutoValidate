@@ -239,7 +239,96 @@ const StudentDashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check all 3 files are uploaded (not just selected)
+    // ── Validation ──
+
+    // Registration No. format: e.g. 2021BTCS001
+    const regNoRegex = /^[0-9]{4}[A-Z]{2,6}[0-9]{3}$/;
+    if (!regNoRegex.test(formData.registrationNo.trim())) {
+      toast.error('Registration number is not valid. Expected format: 2021BTCS001');
+      return;
+    }
+
+    // Mobile No. — exactly 10 digits
+    if (!/^[0-9]{10}$/.test(formData.mobileNo)) {
+      toast.error('Mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    // Email — must be @poornima.edu.in
+    if (!formData.email.endsWith('@poornima.edu.in')) {
+      toast.error('Only @poornima.edu.in email addresses are allowed.');
+      return;
+    }
+
+    // Cumulative Attendance — 0 to 100
+    const attendance = Number(formData.cumulativeAttendance);
+    if (isNaN(attendance) || attendance < 0 || attendance > 100) {
+      toast.error('Cumulative attendance must be between 0 and 100.');
+      return;
+    }
+
+    // Activity Dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fromDate = new Date(formData.startDate);
+    const toDate = new Date(formData.endDate);
+
+    if (!formData.startDate || !formData.endDate) {
+      toast.error('Please select both From Date and To Date.');
+      return;
+    }
+    if (fromDate > today) {
+      toast.error('From Date cannot be a future date.');
+      return;
+    }
+    if (toDate < fromDate) {
+      toast.error('To Date cannot be before From Date.');
+      return;
+    }
+    const diffDays = (toDate - fromDate) / (1000 * 60 * 60 * 24);
+    if (diffDays > 30) {
+      toast.error('Activity duration cannot exceed 30 days.');
+      return;
+    }
+
+    // Team member validation
+    if (Number(formData.numberOfTeamMembers) > 0) {
+      for (let i = 0; i < Number(formData.numberOfTeamMembers); i++) {
+        const member = formData.teamMembers[i];
+        if (!member.name.trim()) {
+          toast.error(`Member ${i + 1} name is required.`);
+          return;
+        }
+        if (!regNoRegex.test(member.registrationNo.trim())) {
+          toast.error(`Member ${i + 1} registration number is not valid.`);
+          return;
+        }
+        if (member.registrationNo.trim() === formData.registrationNo.trim()) {
+          toast.error(`Member ${i + 1} cannot have the same registration number as you.`);
+          return;
+        }
+      }
+    }
+
+    // Parent mobile — exactly 10 digits
+    if (!/^[0-9]{10}$/.test(formData.parentMobileNo)) {
+      toast.error('Parent mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    // Course
+    if (!formData.course) {
+      toast.error('Please select a course.');
+      return;
+    }
+
+    // Activity type — Other requires description
+    if (formData.activityType === 'Other' && !formData.activityTypeOther.trim()) {
+      toast.error('Please specify the activity type.');
+      return;
+    }
+
+    // Documents
     const { brochure, photo, certificate } = uploadedFiles;
     if (!brochure.url || !photo.url || !certificate.url) {
       toast.error('Please wait — all 3 documents must finish uploading first.');
@@ -249,20 +338,10 @@ const StudentDashboard = () => {
       toast.error('Files are still uploading. Please wait.');
       return;
     }
-    if (Number(formData.cumulativeAttendance) < 75) {
-      toast.error('Cumulative attendance must be ≥ 75% to be eligible.');
-      return;
-    }
+
+    // Undertaking
     if (!formData.undertakingAgreed) {
       toast.error('You must agree to the student undertaking before submitting.');
-      return;
-    }
-    if (!formData.course) {
-      toast.error('Please select a course.');
-      return;
-    }
-    if (formData.activityType === 'Other' && !formData.activityTypeOther.trim()) {
-      toast.error('Please specify the activity type.');
       return;
     }
 
@@ -439,7 +518,7 @@ const StudentDashboard = () => {
                   </Field>
                 </Grid>
                 <Grid cols={2}>
-                  <Field label="Cumulative Attendance (%)" required hint="Must be ≥ 75% to be eligible">
+                  <Field label="Cumulative Attendance (%)" required hint="Must be between 0 and 100">
                     <Input name="cumulativeAttendance" type="number" min="0" max="100"
                       value={formData.cumulativeAttendance} onChange={handleChange} placeholder="e.g. 82" />
                   </Field>
@@ -828,39 +907,31 @@ const StudentDashboard = () => {
                       </div>
 
                       {/* ── Approval Chain ── */}
-                      <p style={{ margin: '0 0 10px', fontSize: 11, color: '#9895B5', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Approval Chain</p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {[
-                          ['Tutor', ['tutor_approved', 'hod_approved', 'approved']],
-                          ['HOD', ['hod_approved', 'approved']],
-                          ['Dean', ['approved']],
-                        ].map(([role, doneStatuses], stepIdx, arr) => {
+                      <p style={{ margin: '0 0 10px', fontSize: 11, color: '#9895B5', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Approval Status</p>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {[['Dean', ['approved']]].map(([role, doneStatuses], stepIdx) => {
                           const done = doneStatuses.includes(req.status);
-                          const isFirstPending = !done && (stepIdx === 0 || arr[stepIdx - 1][1].includes(req.status));
-                          const isActive = isFirstPending;
-
+                          const isRejected = req.status === 'rejected';
                           return (
-                            <React.Fragment key={role}>
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: 80 }}>
-                                <div style={{
-                                  width: 28, height: 28, borderRadius: '50%',
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: 12, fontWeight: 'bold',
-                                  background: done ? '#3C3489' : (isActive ? 'white' : '#F7F6FD'),
-                                  color: done ? 'white' : (isActive ? '#3C3489' : '#9895B5'),
-                                  border: isActive ? '1.5px dashed #7F77DD' : 'none',
-                                  boxSizing: 'border-box'
-                                }}>
-                                  {done ? '✓' : stepIdx + 1}
-                                </div>
-                                <span style={{ fontSize: 11, fontWeight: 600, textAlign: 'center', color: done ? '#3B6D11' : (isActive ? '#3C3489' : '#9895B5') }}>
-                                  {role}
-                                </span>
+                            <div key={role} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: 80 }}>
+                              <div style={{
+                                width: 36, height: 36, borderRadius: '50%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 14, fontWeight: 'bold',
+                                background: done ? '#3C3489' : isRejected ? '#FCEBEB' : 'white',
+                                color: done ? 'white' : isRejected ? '#E24B4A' : '#9895B5',
+                                border: isRejected ? '1.5px solid #E24B4A' : done ? 'none' : '1.5px dashed #7F77DD',
+                                boxSizing: 'border-box'
+                              }}>
+                                {done ? '✓' : isRejected ? '✗' : '1'}
                               </div>
-                              {stepIdx < arr.length - 1 && (
-                                <div style={{ flex: 1, height: 2, background: done ? '#3C3489' : '#F0EEF8', margin: '0 8px', alignSelf: 'flex-start', marginTop: 14 }} />
-                              )}
-                            </React.Fragment>
+                              <span style={{ fontSize: 12, fontWeight: 600, textAlign: 'center', color: done ? '#3B6D11' : isRejected ? '#E24B4A' : '#9895B5' }}>
+                                {role}
+                              </span>
+                              <span style={{ fontSize: 11, color: done ? '#3B6D11' : isRejected ? '#E24B4A' : '#9895B5' }}>
+                                {done ? 'Approved' : isRejected ? 'Rejected' : 'Pending'}
+                              </span>
+                            </div>
                           );
                         })}
                       </div>
