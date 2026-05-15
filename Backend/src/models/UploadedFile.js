@@ -46,6 +46,14 @@ const uploadedFileSchema = new mongoose.Schema({
   // Orphan cleanup — if form never submitted, this stays false
   attachedToForm: { type: Boolean, default: false },
 
+  // EXIF metadata — only for participant photos
+  exifDate:     { type: Date, default: null },
+  exifGps:      {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+  },
+  exifVerified: { type: Boolean, default: null }, // null = not checked, true/false = result
+
 }, { timestamps: true });
 
 // Index for quick lookup by uploader and form

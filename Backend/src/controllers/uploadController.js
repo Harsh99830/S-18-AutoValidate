@@ -1,10 +1,28 @@
 const UploadedFile = require('../models/UploadedFile');
 const { uploadToCloudinary } = require('../config/cloudinary');
+let exifr;
+try { exifr = require('exifr'); } catch { exifr = null; }
 
 const FOLDER_MAP = {
   brochure:    'brochures',
   photo:       'photos',
   certificate: 'certificates',
+};
+
+// Extract EXIF date from photo buffer
+const extractExifDate = async (buffer) => {
+  try {
+    if (!exifr) return null;
+    const data = await exifr.parse(buffer, { pick: ['DateTimeOriginal', 'DateTime', 'CreateDate', 'GPSLatitude', 'GPSLongitude'] });
+    if (!data) return null;
+    const date = data.DateTimeOriginal || data.DateTime || data.CreateDate || null;
+    const gps = (data.GPSLatitude && data.GPSLongitude)
+      ? { lat: data.GPSLatitude, lng: data.GPSLongitude }
+      : null;
+    return { date, gps };
+  } catch {
+    return null;
+  }
 };
 
 const uploadFile = async (req, res) => {
@@ -23,6 +41,16 @@ const uploadFile = async (req, res) => {
     // Upload buffer to Cloudinary
     const result = await uploadToCloudinary(req.file.buffer, folder, req.file.mimetype);
 
+    // EXIF extraction — only for participant photos
+    let exifData = null;
+    let exifWarning = null;
+    if (type === 'photo' && req.file.mimetype.startsWith('image/')) {
+      exifData = await extractExifDate(req.file.buffer);
+      if (!exifData || !exifData.date) {
+        exifWarning = 'No EXIF date found in photo. Date could not be verified.';
+      }
+    }
+
     // Save record to MongoDB
     const record = await UploadedFile.create({
       uploadedBy:         req.user._id,
@@ -34,12 +62,18 @@ const uploadFile = async (req, res) => {
       cloudinaryUrl:      result.secure_url,
       resourceType:       result.resource_type,
       attachedToForm:     false,
+      exifDate:           exifData?.date || null,
+      exifGps:            exifData?.gps || null,
+      exifVerified:       type === 'photo' ? (!!exifData?.date) : null,
     });
 
     res.status(201).json({
-      url:      record.cloudinaryUrl,
-      publicId: record.cloudinaryPublicId,
-      fileId:   record._id,
+      url:         record.cloudinaryUrl,
+      publicId:    record.cloudinaryPublicId,
+      fileId:      record._id,
+      exifDate:    exifData?.date || null,
+      exifGps:     exifData?.gps || null,
+      exifWarning: exifWarning || null,
     });
 
   } catch (err) {

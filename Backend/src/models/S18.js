@@ -67,6 +67,13 @@ const s18Schema = new mongoose.Schema({
 
   rejectionReason: { type: String },
 
+  // Photo EXIF verification flag
+  photoVerificationFlag: {
+    type: String,
+    enum: ['EXIF_DATE_VERIFIED', 'EXIF_DATE_MISMATCH', 'EXIF_NO_DATA', null],
+    default: null,
+  },
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('S18', s18Schema);

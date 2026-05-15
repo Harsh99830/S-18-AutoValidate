@@ -90,7 +90,31 @@ const submitForm = async (req, res) => {
       return res.status(400).json({ message: 'All 3 documents (brochure, photo, certificate) are required.' });
     }
 
-    const form = await S18.create({ ...req.body, course: trimmedCourse, student: req.user._id });
+    // EXIF date verification — check if photo was taken within activity date range
+    const UploadedFile = require('../models/UploadedFile');
+    const photoRecord = await UploadedFile.findOne({
+      cloudinaryUrl: participantPhotoLink,
+      uploadedBy: req.user._id,
+      fileType: 'photo'
+    });
+
+    let photoVerificationFlag = null;
+    if (photoRecord && photoRecord.exifDate) {
+      const photoDate = new Date(photoRecord.exifDate);
+      photoDate.setHours(0, 0, 0, 0);
+      const actFrom = new Date(fromDate); actFrom.setHours(0, 0, 0, 0);
+      const actTo   = new Date(toDate);   actTo.setHours(23, 59, 59, 999);
+
+      if (photoDate < actFrom || photoDate > actTo) {
+        photoVerificationFlag = 'EXIF_DATE_MISMATCH'; // Flag for dean, not block
+      } else {
+        photoVerificationFlag = 'EXIF_DATE_VERIFIED';
+      }
+    } else {
+      photoVerificationFlag = 'EXIF_NO_DATA';
+    }
+
+    const form = await S18.create({ ...req.body, course: trimmedCourse, student: req.user._id, photoVerificationFlag });
     res.status(201).json(form);
   } catch (error) {
     res.status(500).json({ message: error.message });

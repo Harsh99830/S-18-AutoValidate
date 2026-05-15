@@ -196,26 +196,12 @@ const DeanDashboard = () => {
                             {form.registrationNo} • {form.course || '—'} • {form.branch} • {form.year}
                           </p>
                         </div>
-                        <span className="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-1 rounded-full font-semibold shrink-0">
-                          HOD Approved
+                        <span className="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-1 rounded-full font-semibold shrink-0">
+                          Pending Review
                         </span>
                       </div>
 
-                      {/* HOD REMARKS */}
-                      {form.hodApproval?.remarks && (
-                        <div className="mt-3 bg-indigo-50 rounded-lg px-3 py-2 text-sm text-indigo-700">
-                          <span className="font-semibold">HOD Remarks: </span>
-                          {form.hodApproval.remarks}
-                        </div>
-                      )}
 
-                      {/* TUTOR REMARKS */}
-                      {form.tutorApproval?.remarks && (
-                        <div className="mt-2 bg-blue-50 rounded-lg px-3 py-2 text-sm text-blue-700">
-                          <span className="font-semibold">Tutor Remarks: </span>
-                          {form.tutorApproval.remarks}
-                        </div>
-                      )}
 
                       {/* MAIN DETAILS GRID */}
                       <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
@@ -275,6 +261,27 @@ const DeanDashboard = () => {
                         )}
                       </div>
 
+                      {/* EXIF VERIFICATION BADGE */}
+                      {form.photoVerificationFlag && (
+                        <div className={`mt-3 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold w-fit ${
+                          form.photoVerificationFlag === 'EXIF_DATE_VERIFIED'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : form.photoVerificationFlag === 'EXIF_DATE_MISMATCH'
+                            ? 'bg-red-50 text-red-700 border border-red-200'
+                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                        }`}>
+                          {form.photoVerificationFlag === 'EXIF_DATE_VERIFIED' && (
+                            <><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Photo EXIF date matches activity dates</>
+                          )}
+                          {form.photoVerificationFlag === 'EXIF_DATE_MISMATCH' && (
+                            <><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Warning: Photo EXIF date does not match activity dates</>
+                          )}
+                          {form.photoVerificationFlag === 'EXIF_NO_DATA' && (
+                            <><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01"/></svg> No EXIF data in photo — date could not be verified</>
+                          )}
+                        </div>
+                      )}
+
                       {/* EXPAND / COLLAPSE */}
                       <button onClick={() => toggleExpand(id)}
                         className="mt-3 text-sm text-[#3C3489] font-medium select-none hover:underline">
@@ -324,20 +331,10 @@ const DeanDashboard = () => {
                           </div>
                           {/* Approval Chain */}
                           <div className="col-span-2 mt-1">
-                            <span className="text-gray-400 text-xs uppercase tracking-wide block mb-2">Approval Chain</span>
-                            <div className="flex items-center gap-2 mb-1">
-                              <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                              <span className="text-gray-700 text-xs">
-                                Tutor: {form.tutorApproval?.approvedBy?.name || '—'}
-                                <span className="text-gray-400 ml-2">{formatDate(form.tutorApproval?.approvedAt)}</span>
-                              </span>
-                            </div>
+                            <span className="text-gray-400 text-xs uppercase tracking-wide block mb-2">Approval</span>
                             <div className="flex items-center gap-2">
-                              <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                              <span className="text-gray-700 text-xs">
-                                HOD: {form.hodApproval?.approvedBy?.name || '—'}
-                                <span className="text-gray-400 ml-2">{formatDate(form.hodApproval?.approvedAt)}</span>
-                              </span>
+                              <CheckCircle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
+                              <span className="text-gray-700 text-xs">Awaiting Dean approval</span>
                             </div>
                           </div>
                         </div>
