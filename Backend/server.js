@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/db');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const passport = require('passport');
 
 // IMPORTANT: passport strategy must be configured BEFORE routes are loaded
@@ -20,7 +21,8 @@ app.use(express.json());
 app.use(session({
   secret: process.env.JWT_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI })
 }));
 app.use(passport.initialize());
 
