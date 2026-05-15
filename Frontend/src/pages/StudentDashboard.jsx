@@ -527,7 +527,6 @@ const StudentDashboard = () => {
               </button>
             ))}
           </div>
-          <span style={{ fontSize: 11, color: '#9895B5', fontWeight: 500 }}>Max 2 per semester</span>
         </div>
 
         {/* ── NEW REQUEST FORM ── */}
