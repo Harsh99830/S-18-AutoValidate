@@ -189,9 +189,9 @@ const StudentDashboard = () => {
   };
 
   const [uploadedFiles, setUploadedFiles] = useState({
-    brochure:    { url: null, fileId: null, uploading: false },
+    brochure:    { url: null, fileId: null, uploading: false, aiAnalysis: null },
     photo:       { url: null, fileId: null, uploading: false, aiAnalysis: null, exifWarning: null },
-    certificate: { url: null, fileId: null, uploading: false },
+    certificate: { url: null, fileId: null, uploading: false, aiAnalysis: null },
   });
 
   useEffect(() => {
@@ -263,8 +263,10 @@ const StudentDashboard = () => {
       });
       setUploadedFiles(p => ({
         ...p,
-        [key]: { url: data.url, fileId: data.fileId, uploading: false,
-          ...(key === 'photo' ? { aiAnalysis: data.aiAnalysis || null, exifWarning: data.exifWarning || null } : {})
+        [key]: {
+          url: data.url, fileId: data.fileId, uploading: false,
+          aiAnalysis: data.aiAnalysis || null,
+          ...(key === 'photo' ? { exifWarning: data.exifWarning || null } : {})
         },
       }));
       if (key === 'photo' && data.aiAnalysis) {
@@ -274,6 +276,22 @@ const StudentDashboard = () => {
           toast.error('Warning: This does not look like an event venue photo. Please re-upload.');
         } else {
           toast.success('Photo uploaded and verified!');
+        }
+      } else if (key === 'certificate' && data.aiAnalysis) {
+        if (data.aiAnalysis.suspicious) {
+          toast.error('Warning: Certificate looks suspicious. Please upload a genuine certificate.');
+        } else if (!data.aiAnalysis.isCertificate) {
+          toast.error('Warning: This does not look like a valid certificate. Please re-upload.');
+        } else {
+          toast.success('Certificate uploaded and verified!');
+        }
+      } else if (key === 'brochure' && data.aiAnalysis) {
+        if (data.aiAnalysis.suspicious) {
+          toast.error('Warning: Brochure looks suspicious. Please upload a genuine event brochure.');
+        } else if (!data.aiAnalysis.isBrochure) {
+          toast.error('Warning: This does not look like an event brochure. Please re-upload.');
+        } else {
+          toast.success('Brochure uploaded and verified!');
         }
       } else {
         toast.success(`${key.charAt(0).toUpperCase() + key.slice(1)} uploaded!`);
@@ -490,9 +508,9 @@ const StudentDashboard = () => {
         parentMobileNo: '', undertakingAgreed: false,
       }));
       setUploadedFiles({
-        brochure:    { url: null, fileId: null, uploading: false },
-        photo:       { url: null, fileId: null, uploading: false },
-        certificate: { url: null, fileId: null, uploading: false },
+        brochure:    { url: null, fileId: null, uploading: false, aiAnalysis: null },
+        photo:       { url: null, fileId: null, uploading: false, aiAnalysis: null, exifWarning: null },
+        certificate: { url: null, fileId: null, uploading: false, aiAnalysis: null },
       });
 
     } catch (err) {
@@ -712,6 +730,51 @@ const StudentDashboard = () => {
                       <FileUploadBox name="brochureFile" file={formData.brochureFile} onChange={handleChange} accept=".pdf,image/*" uploading={uploadedFiles.brochure.uploading} />
                     </Field>
                     <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF or image • Required</p>
+                    {/* AI Analysis Badge — Brochure */}
+                    {uploadedFiles.brochure.url && !uploadedFiles.brochure.uploading && (() => {
+                      const ai = uploadedFiles.brochure.aiAnalysis;
+                      if (!ai) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF8EC', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>⚠️</span> AI verification unavailable. Dean will manually review.
+                          </div>
+                        );
+                      }
+                      if (ai.suspicious) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FCEBEB', border: '0.5px solid #F4A4A4', fontSize: 11.5, color: '#A32D2D' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>❌</span> Suspicious Brochure Detected
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ color: '#C44', marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      if (!ai.isBrochure) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF4E0', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>⚠️</span> Not an Event Brochure
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#EAF3DE', border: '0.5px solid #A8D580', fontSize: 11.5, color: '#3B6D11' }}>
+                          <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                            <span>✅</span> Event Brochure Verified
+                          </div>
+                          <div>{ai.reason}</div>
+                          {ai.hasDate && ai.visibleDate && (
+                            <div style={{ marginTop: 2 }}>Visible Date: <strong>{ai.visibleDate}</strong></div>
+                          )}
+                          {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div>
                     <Field label="Photo at Event Venue" required>
@@ -772,6 +835,51 @@ const StudentDashboard = () => {
                       <FileUploadBox name="certificateFile" file={formData.certificateFile} onChange={handleChange} accept=".pdf,image/*" uploading={uploadedFiles.certificate.uploading} />
                     </Field>
                     <p style={{ margin: '6px 0 0', fontSize: 11, color: '#9895B5', textAlign: 'center' }}>PDF or image • Required</p>
+                    {/* AI Analysis Badge — Certificate */}
+                    {uploadedFiles.certificate.url && !uploadedFiles.certificate.uploading && (() => {
+                      const ai = uploadedFiles.certificate.aiAnalysis;
+                      if (!ai) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF8EC', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>⚠️</span> AI verification unavailable. Dean will manually review.
+                          </div>
+                        );
+                      }
+                      if (ai.suspicious) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FCEBEB', border: '0.5px solid #F4A4A4', fontSize: 11.5, color: '#A32D2D' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>❌</span> Suspicious Certificate Detected
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ color: '#C44', marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      if (!ai.isCertificate) {
+                        return (
+                          <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#FFF4E0', border: '0.5px solid #FAC775', fontSize: 11.5, color: '#854F0B' }}>
+                            <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                              <span>⚠️</span> Not a Valid Certificate
+                            </div>
+                            <div>{ai.reason}</div>
+                            {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div style={{ marginTop: 8, padding: '7px 10px', borderRadius: 8, background: '#EAF3DE', border: '0.5px solid #A8D580', fontSize: 11.5, color: '#3B6D11' }}>
+                          <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                            <span>✅</span> Certificate Verified
+                          </div>
+                          <div>{ai.reason}</div>
+                          {ai.hasDate && ai.visibleDate && (
+                            <div style={{ marginTop: 2 }}>Visible Date: <strong>{ai.visibleDate}</strong></div>
+                          )}
+                          {ai.confidence && <div style={{ marginTop: 2 }}>Confidence: {ai.confidence}</div>}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </Grid>
               </Card>
@@ -784,13 +892,7 @@ const StudentDashboard = () => {
                     <Input name="parentMobileNo" value={formData.parentMobileNo} onChange={handleChange} onBlur={handleBlur} placeholder="10-digit number" maxLength={10} error={fieldErrors.parentMobileNo} />
                   </Field>
                 </Grid>
-                <div style={{
-                  marginTop: 12, background: '#FFF8EC', borderRadius: 10,
-                  border: '0.5px solid #FAC775', padding: '12px 16px',
-                  fontSize: 13, color: '#854F0B', lineHeight: 1.6
-                }}>
-                  <strong>Note:</strong> Written parent permission is required. The concerned authority will contact the parent directly if written consent is not received before the activity date.
-                </div>
+
               </Card>
 
               {/* Section: Undertaking */}

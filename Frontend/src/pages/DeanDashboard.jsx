@@ -324,6 +324,72 @@ const DeanDashboard = () => {
                         </div>
                       )}
 
+                      {/* AI ANALYSIS BADGES */}
+                      {form.photoAIAnalysis && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {/* Photo AI */}
+                          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                            form.photoAIAnalysis.suspicious
+                              ? 'bg-red-50 text-red-700 border-red-200'
+                              : form.photoAIAnalysis.isEventPhoto
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          }`}>
+                            <span>📷 Photo:</span>
+                            <span>
+                              {form.photoAIAnalysis.suspicious
+                                ? '⚠ Suspicious'
+                                : form.photoAIAnalysis.isEventPhoto
+                                ? '✓ Looks like event photo'
+                                : '✗ Not an event photo'}
+                            </span>
+                            <span className="text-xs opacity-70">({form.photoAIAnalysis.confidence})</span>
+                          </div>
+
+                          {/* Certificate AI */}
+                          {form.certificateAIAnalysis && (
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                              form.certificateAIAnalysis.suspicious
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : form.certificateAIAnalysis.isCertificate
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                              <span>📜 Certificate:</span>
+                              <span>
+                                {form.certificateAIAnalysis.suspicious
+                                  ? '⚠ Suspicious'
+                                  : form.certificateAIAnalysis.isCertificate
+                                  ? '✓ Valid certificate'
+                                  : '✗ Not a certificate'}
+                              </span>
+                              <span className="text-xs opacity-70">({form.certificateAIAnalysis.confidence})</span>
+                            </div>
+                          )}
+
+                          {/* Brochure AI */}
+                          {form.brochureAIAnalysis && (
+                            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                              form.brochureAIAnalysis.suspicious
+                                ? 'bg-red-50 text-red-700 border-red-200'
+                                : form.brochureAIAnalysis.isBrochure
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            }`}>
+                              <span>📋 Brochure:</span>
+                              <span>
+                                {form.brochureAIAnalysis.suspicious
+                                  ? '⚠ Suspicious'
+                                  : form.brochureAIAnalysis.isBrochure
+                                  ? '✓ Valid brochure'
+                                  : '✗ Not a brochure'}
+                              </span>
+                              <span className="text-xs opacity-70">({form.brochureAIAnalysis.confidence})</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* EXPAND / COLLAPSE */}
                       <button onClick={() => toggleExpand(id)}
                         className="mt-3 text-sm text-[#3C3489] font-medium select-none hover:underline">
