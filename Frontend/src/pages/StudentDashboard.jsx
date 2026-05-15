@@ -323,13 +323,18 @@ const StudentDashboard = () => {
     setFieldError(name, err);
   };
 
+  const [touchedTeamMembers, setTouchedTeamMembers] = useState({});
+
   const handleTeamMemberBlur = (idx, field, value) => {
     const key = `teamMember_${idx}_${field}`;
+    setTouchedTeamMembers(p => ({ ...p, [key]: true }));
     if (field === 'registrationNo') {
-      if (!regNoRegex.test((value || '').trim())) {
-        setFieldError(key, 'Invalid format. Expected: 2021BTCS001');
+      if (!value.trim()) {
+        setFieldError(key, 'Registration number is required.');
+      } else if (!regNoRegex.test(value.trim())) {
+        setFieldError(key, 'Wrong format. Use something like 2021BTCS001');
       } else if (value.trim() === formData.registrationNo.trim()) {
-        setFieldError(key, 'Cannot be same as your registration number.');
+        setFieldError(key, 'This cannot be the same as your own registration number.');
       } else {
         clearFieldError(key);
       }
@@ -342,6 +347,45 @@ const StudentDashboard = () => {
   const handleTeamMemberChange = (idx, field, value) => {
     const updated = formData.teamMembers.map((m, i) => i === idx ? { ...m, [field]: value } : m);
     setFormData(p => ({ ...p, teamMembers: updated }));
+    const key = `teamMember_${idx}_${field}`;
+    // Mark as touched on first change so errors show immediately
+    setTouchedTeamMembers(p => ({ ...p, [key]: true }));
+    if (field === 'name') {
+      if (!value.trim()) setFieldError(key, 'Name is required.');
+      else clearFieldError(key);
+    } else if (field === 'registrationNo') {
+      if (!value.trim()) {
+        setFieldError(key, 'Registration number is required.');
+      } else if (!regNoRegex.test(value.trim())) {
+        setFieldError(key, 'Wrong format. Use: 2021BTCS001');
+      } else if (value.trim() === formData.registrationNo.trim()) {
+        setFieldError(key, 'Cannot be same as your own registration number.');
+      } else {
+        clearFieldError(key);
+      }
+    }
+  };
+
+  // Touch all team member fields (used on submit to show all errors at once)
+  const touchAllTeamMemberFields = () => {
+    const touched = {};
+    const errors = {};
+    for (let i = 0; i < Number(formData.numberOfTeamMembers); i++) {
+      const member = formData.teamMembers[i];
+      touched[`teamMember_${i}_name`] = true;
+      touched[`teamMember_${i}_registrationNo`] = true;
+      if (!member.name.trim()) errors[`teamMember_${i}_name`] = 'Name is required.';
+      if (!member.registrationNo.trim()) {
+        errors[`teamMember_${i}_registrationNo`] = 'Registration number is required.';
+      } else if (!regNoRegex.test(member.registrationNo.trim())) {
+        errors[`teamMember_${i}_registrationNo`] = 'Wrong format. Use: 2021BTCS001';
+      } else if (member.registrationNo.trim() === formData.registrationNo.trim()) {
+        errors[`teamMember_${i}_registrationNo`] = 'Cannot be same as your own registration number.';
+      }
+    }
+    setTouchedTeamMembers(p => ({ ...p, ...touched }));
+    setFieldErrors(p => ({ ...p, ...errors }));
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -398,22 +442,12 @@ const StudentDashboard = () => {
       return;
     }
 
-    // Team member validation
+    // Team member validation — touch all fields to show inline errors
     if (Number(formData.numberOfTeamMembers) > 0) {
-      for (let i = 0; i < Number(formData.numberOfTeamMembers); i++) {
-        const member = formData.teamMembers[i];
-        if (!member.name.trim()) {
-          toast.error(`Member ${i + 1} name is required.`);
-          return;
-        }
-        if (!regNoRegex.test(member.registrationNo.trim())) {
-          toast.error(`Member ${i + 1} registration number is not valid.`);
-          return;
-        }
-        if (member.registrationNo.trim() === formData.registrationNo.trim()) {
-          toast.error(`Member ${i + 1} cannot have the same registration number as you.`);
-          return;
-        }
+      const allValid = touchAllTeamMemberFields();
+      if (!allValid) {
+        toast.error('Please fill in all team member details correctly.');
+        return;
       }
     }
 
@@ -668,7 +702,7 @@ const StudentDashboard = () => {
                 )}
                 <Grid cols={2}>
                   <Field label="From Date" required error={fieldErrors.startDate}>
-                    <Input name="startDate" type="date" value={formData.startDate} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.startDate} />
+                    <Input name="startDate" type="date" value={formData.startDate} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.startDate} max={new Date().toISOString().split('T')[0]} />
                   </Field>
                   <Field label="To Date" required error={fieldErrors.endDate}>
                     <Input name="endDate" type="date" value={formData.endDate} onChange={handleChange} onBlur={handleBlur} error={fieldErrors.endDate} />
@@ -679,39 +713,83 @@ const StudentDashboard = () => {
               {/* Section: Team Members */}
               <Card>
                 <SectionHeader icon="03" title="Team Members" />
-                <Field label="Team members joining (excluding yourself)">
+                <Field label="How many team members are joining? (not counting yourself)">
                   <Select name="numberOfTeamMembers" value={formData.numberOfTeamMembers} onChange={handleChange}>
-                    <option value="0">Going alone</option>
+                    <option value="0">Just me — going alone</option>
                     <option value="2">2 members</option>
                     <option value="3">3 members</option>
                   </Select>
                 </Field>
-                {numMembers > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
-                    {Array.from({ length: numMembers }).map((_, i) => (
-                      <div key={i} style={{
-                        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
-                        background: '#F7F6FD', borderRadius: 10,
-                        border: '0.5px solid #E5E3F8', padding: '14px 16px'
-                      }}>
-                        <Field label={`Member ${i + 1} — Name`} error={fieldErrors[`teamMember_${i}_name`]}>
-                          <Input value={formData.teamMembers[i].name}
-                            onChange={e => handleTeamMemberChange(i, 'name', e.target.value)}
-                            onBlur={e => handleTeamMemberBlur(i, 'name', e.target.value)}
-                            error={fieldErrors[`teamMember_${i}_name`]}
-                            placeholder="Full name" />
-                        </Field>
-                        <Field label="Registration No." error={fieldErrors[`teamMember_${i}_registrationNo`]}>
-                          <Input value={formData.teamMembers[i].registrationNo}
-                            onChange={e => handleTeamMemberChange(i, 'registrationNo', e.target.value)}
-                            onBlur={e => handleTeamMemberBlur(i, 'registrationNo', e.target.value)}
-                            error={fieldErrors[`teamMember_${i}_registrationNo`]}
-                            placeholder="Reg. no." />
-                        </Field>
-                      </div>
-                    ))}
-                  </div>
-                )}
+
+                {numMembers > 0 && (() => {
+                  // Check if any member field is incomplete (for the warning banner)
+                  const hasIncomplete = Array.from({ length: numMembers }).some((_, i) => {
+                    const m = formData.teamMembers[i];
+                    return !m.name.trim() || !m.registrationNo.trim() || !regNoRegex.test(m.registrationNo.trim());
+                  });
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+
+                      {/* Incomplete warning banner */}
+                      {hasIncomplete && (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          background: '#FFF8EC', border: '0.5px solid #FAC775',
+                          borderRadius: 10, padding: '10px 14px',
+                          fontSize: 12.5, color: '#854F0B',
+                        }}>
+                          <span style={{ fontSize: 15, flexShrink: 0 }}>⚠️</span>
+                          <span>Please fill in the name and registration number for all team members before submitting.</span>
+                        </div>
+                      )}
+
+                      {Array.from({ length: numMembers }).map((_, i) => {
+                        const nameErr = fieldErrors[`teamMember_${i}_name`];
+                        const regErr = fieldErrors[`teamMember_${i}_registrationNo`];
+                        const memberDone = formData.teamMembers[i].name.trim() && regNoRegex.test(formData.teamMembers[i].registrationNo.trim());
+                        return (
+                          <div key={i} style={{
+                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
+                            background: nameErr || regErr ? '#FFF8EC' : memberDone ? '#F0FBE9' : '#F7F6FD',
+                            borderRadius: 10,
+                            border: nameErr || regErr
+                              ? '0.5px solid #FAC775'
+                              : memberDone
+                              ? '0.5px solid #A8D580'
+                              : '0.5px solid #E5E3F8',
+                            padding: '14px 16px',
+                            transition: 'all 0.2s',
+                          }}>
+                            {/* Member status pill */}
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#3C3489' }}>Member {i + 1}</span>
+                              {memberDone
+                                ? <span style={{ fontSize: 11, fontWeight: 600, color: '#3B6D11', background: '#EAF3DE', padding: '2px 8px', borderRadius: 20 }}>✓ Complete</span>
+                                : <span style={{ fontSize: 11, fontWeight: 600, color: '#854F0B', background: '#FFF8EC', padding: '2px 8px', borderRadius: 20 }}>Incomplete</span>
+                              }
+                            </div>
+
+                            <Field label="Full Name" required error={nameErr}>
+                              <Input value={formData.teamMembers[i].name}
+                                onChange={e => handleTeamMemberChange(i, 'name', e.target.value)}
+                                onBlur={e => handleTeamMemberBlur(i, 'name', e.target.value)}
+                                error={nameErr}
+                                placeholder="e.g. Rahul Sharma" />
+                            </Field>
+                            <Field label="Registration No." required error={regErr}>
+                              <Input value={formData.teamMembers[i].registrationNo}
+                                onChange={e => handleTeamMemberChange(i, 'registrationNo', e.target.value)}
+                                onBlur={e => handleTeamMemberBlur(i, 'registrationNo', e.target.value)}
+                                error={regErr}
+                                placeholder="e.g. 2021BTCS002" />
+                            </Field>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </Card>
 
               {/* Section: Documents */}
