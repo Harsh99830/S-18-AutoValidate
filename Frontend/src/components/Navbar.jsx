@@ -15,10 +15,10 @@ const Navbar = () => {
     switch (role?.toLowerCase()) {
       case 'student':
         return { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', text: '#93C5FD' };
-      case 'tutor':
-        return { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', text: '#6EE7B7' };
-      case 'hod':
+      case 'dean':
         return { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.3)', text: '#FCD34D' };
+      case 'chief_proctor':
+        return { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)', text: '#6EE7B7' };
       default:
         return { bg: 'rgba(255,255,255,0.1)', border: 'rgba(255,255,255,0.2)', text: '#E5E7EB' };
     }

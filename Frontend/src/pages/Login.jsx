@@ -18,8 +18,6 @@ const BG1 = 'https://poornima.edu.in/assets/images/Online_meta.png';
 
 const ROLE_ROUTES = {
   student: '/dashboard/student',
-  tutor:   '/dashboard/tutor',
-  hod:     '/dashboard/hod',
   dean:    '/dashboard/dean',
   puamdin: '/dashboard/admin',
 };
@@ -156,7 +154,7 @@ function Login() {
           <div className="flex flex-col gap-3">
             {[
               { num: '01', text: 'Online S18 form submit karo' },
-              { num: '02', text: 'Tutor → HOD → Dean digital approval' },
+              { num: '02', text: 'Dean digital approval' },
               { num: '03', text: 'Bonus attendance auto credit' },
             ].map((s) => (
               <div key={s.num} className="flex items-center gap-4">
@@ -201,7 +199,7 @@ function Login() {
                 {showStaffLogin ? 'Staff Login' : 'Welcome Back'}
               </h2>
               <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {showStaffLogin ? 'Tutor / HOD / Dean' : 'Sign in with your university account'}
+                {showStaffLogin ? 'Dean Login' : 'Sign in with your university account'}
               </p>
             </div>
 

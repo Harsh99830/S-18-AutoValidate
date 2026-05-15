@@ -43,8 +43,6 @@ const AuthCallback = () => {
 
         const routes = {
           student: '/dashboard/student',
-          tutor: '/dashboard/tutor',
-          hod: '/dashboard/hod',
           chief_proctor: '/dashboard/proctor',
         };
 

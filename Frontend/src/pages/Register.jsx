@@ -63,9 +63,7 @@ export default function Register() {
 
   const tabs = [
     { id: 'student', label: 'Student' },
-    { id: 'tutor', label: 'Tutor' },
-    { id: 'hod', label: 'HOD' },
-    { id: 'chief_proctor', label: 'Dean' }
+    { id: 'dean', label: 'Dean' }
   ];
 
   const handleGoogleLogin = () => {
@@ -174,7 +172,7 @@ export default function Register() {
           <div className="flex flex-col gap-3">
             {[
               { num: '01', text: 'Online S18 form submit karo' },
-              { num: '02', text: 'Tutor → HOD → Chief Proctor digital approval' },
+              { num: '02', text: 'Chief Proctor digital approval' },
               { num: '03', text: 'Bonus attendance auto credit' },
             ].map((s) => (
               <div key={s.num} className="flex items-center gap-4">
@@ -287,7 +285,7 @@ export default function Register() {
                 
                 <div className="mb-4">
                   <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                    {activeTab === 'hod' ? 'HOD of which Department' : 'Department'}
+                    {activeTab === 'dean' ? 'Dean Department' : 'Department'}
                   </label>
                   <select
                     name="department"
