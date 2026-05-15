@@ -6,8 +6,6 @@ const generateApprovalPDF = async (req, res) => {
   try {
     const form = await S18.findById(req.params.id)
       .populate('student', 'name email')
-      .populate('tutorApproval.approvedBy', 'name')
-      .populate('hodApproval.approvedBy', 'name')
       .populate('deanApproval.approvedBy', 'name');
 
     if (!form) return res.status(404).json({ message: 'Form not found' });
@@ -171,12 +169,6 @@ const generateApprovalPDF = async (req, res) => {
     doc.moveDown(0.4);
 
     const approvalRows = [
-      ['Tutor', form.tutorApproval?.approvedBy?.name || '—',
-        form.tutorApproval?.approvedAt ? new Date(form.tutorApproval.approvedAt).toLocaleDateString('en-IN') : '—',
-        form.tutorApproval?.remarks || '—'],
-      ['HOD', form.hodApproval?.approvedBy?.name || '—',
-        form.hodApproval?.approvedAt ? new Date(form.hodApproval.approvedAt).toLocaleDateString('en-IN') : '—',
-        form.hodApproval?.remarks || '—'],
       ['Dean', form.deanApproval?.approvedBy?.name || '—',
         form.deanApproval?.approvedAt ? new Date(form.deanApproval.approvedAt).toLocaleDateString('en-IN') : '—',
         form.deanApproval?.remarks || '—'],

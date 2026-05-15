@@ -93,7 +93,7 @@ const register = async (req, res) => {
     }
 
     // Role check
-    if (!['tutor', 'hod', 'chief_proctor'].includes(role)) {
+    if (!['dean'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role for registration.' });
     }
 

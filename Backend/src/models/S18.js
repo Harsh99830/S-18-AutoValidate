@@ -41,25 +41,11 @@ const s18Schema = new mongoose.Schema({
   parentConsentReceived: { type: Boolean, default: false },
   parentMobileNo: { type: String },
 
-  // Approval Chain: pending → tutor_approved → hod_approved → approved / rejected
+  // Approval Chain: pending → approved / rejected
   status: {
     type: String,
-    enum: ['pending', 'tutor_approved', 'hod_approved', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
-  },
-
-  tutorApproval: {
-    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    approvedAt: { type: Date },
-    remarks: { type: String },
-    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
-  },
-
-  hodApproval: {
-    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    approvedAt: { type: Date },
-    remarks: { type: String },
-    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
   },
 
   // Dean is the FINAL approver — includes bonus attendance

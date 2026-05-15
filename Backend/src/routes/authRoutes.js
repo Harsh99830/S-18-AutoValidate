@@ -7,7 +7,7 @@ const { protect } = require('../middleware/authMiddleware');
 router.get('/google', googleAuth);
 router.get('/google/callback', googleCallback);
 
-// Staff email + password login (HOD, Tutor, Chief Proctor)
+// Staff email + password login (Dean only)
 router.post('/staff-login', staffLogin);
 
 // Manual Registration
